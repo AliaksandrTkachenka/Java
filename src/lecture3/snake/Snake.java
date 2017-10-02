@@ -1,215 +1,204 @@
 package lecture3.snake;
 
-import java.io.IOException;
-
 public class Snake {
-    private int[][] array;
-    private int positionV;
-    private int positionH;
-    private int width;
-    private int length;
-
-    private enum direction {
-        up,
-        down,
-        left,
-        right
-    }
-
-    direction dir;
-    private boolean isMoving;
+    private static final int DEFAULT_SIZE = 5;
+    private int positionHor;
+    private int positionVer;
+    private Direction direction;
+    private Board board;
 
     /**
-     * Creates an empty array with start position (0,0) and start direction "down"
-     * @param width
-     * @param length
+     * Creates a default snake with the following parameters
+     * default direction is down
+     * default board size is 5x5
      */
-    public Snake(int width, int length) {
-        array = new int[length][width];
-        positionV = 0;
-        positionH = 0;
-        array[positionV][positionH] = 1;
-        this.width = width;
-        this.length = length;
-        dir = direction.down;
-        isMoving = true;
+    public Snake() {
+        direction = Direction.down;
+        board = new Board(DEFAULT_SIZE, DEFAULT_SIZE);
     }
 
-    private void output() {
-        for (int i = 0; i < length; i++) {
-            for (int j = 0; j < width; j++) {
-                System.out.print(array[i][j] + "\t");
-            }
-            System.out.print("\n");
+    /**
+     * Creates a default snake with the following parameters
+     * @param length - board's length
+     * @param width - board's width
+     */
+    public Snake(int length, int width) {
+        board = new Board(length, width);
+        direction = Direction.down;
+    }
+
+    /**
+     * Creates a snake with the following parameters
+     * @param length - board's length
+     * @param width - board's width
+     * @param positionVer - initial vertical position
+     * @param positionHor - initial horizontal position
+     * @param direction - initial direction of the snake
+     */
+    public Snake(int length, int width, int positionVer, int positionHor, Direction direction) {
+        board = new Board(length, width);
+        this.positionVer = positionVer;
+        this.positionHor = positionHor;
+        this.direction = direction;
+    }
+
+    /**
+     * starts snake's movement
+     */
+    public void move() {
+        board.fillElement(positionVer, positionHor);
+        do {
+            do {
+                board.showBoard();
+            } while (moveStep() == true);
+        } while(turnCheck() == true);
+    }
+
+    /**
+     * @return true if movement to any of 4 directions is allowed
+     */
+    private boolean turnCheck() {
+        direction = Direction.down;
+        if(moveCheck() == true) {
+            positionVer++;
+            board.fillElement(positionVer, positionHor);
+            return true;
         }
-        System.out.print("\n");
+        direction = Direction.right;
+        if(moveCheck() == true) {
+            positionHor++;
+            board.fillElement(positionVer, positionHor);
+            return true;
+        }
+        direction = Direction.up;
+        if (moveCheck() == true) {
+            positionVer--;
+            board.fillElement(positionVer, positionHor);
+            return true;
+        }
+        direction = Direction.left;
+        if (moveCheck() == true) {
+            positionHor--;
+            board.fillElement(positionVer, positionHor);
+            return true;
+        }
+        return false;
     }
 
     /**
-     * Describes the motion of a snake in a spiral with the verification
-     * of the possibility of turning and continuing motion
+     * makes snake move for 1 step in it's direction
+     *
+     * @return true if snake moved, otherwise false
      */
-    public void start() {
-        //Проверка на то, двигается ли ещё змейка.
-        while (isMoving) {
-            //Вывод текущего состояния матрицы (пооения змейки)
-            output();
-            if(width == 1 && length == 1) {
-                break;
-            }
-            //В зависимости от направления движения проверки возможности движения различные
-            //По сути, они симметричны. Если есть возможность сделать это более красиво, буду рад посмотреть.
-            switch (dir) {
+    private boolean moveStep() {
+        if(moveCheck() == true) {
+            switch (direction) {
                 case down: {
-                    if(length == 1) {
-                        array[positionV][positionH] = 1;
-                        dir = direction.right;
-                        break;
-                    }
-                    if (positionV + 2 < length) {
-                        if (array[positionV + 2][positionH] == 0) {
-                            array[positionV + 1][positionH] = 1;
-                            positionV++;
-                        } else {
-                            if (positionH + 2 < width) {
-                                if (array[positionV][positionH + 1] == 0 &&
-                                        array[positionV + 1][positionH + 1] == 0 &&
-                                        array[positionV][positionH + 2] == 0
-                                        ) {
-                                    dir = direction.right;
-                                }
-                                else {
-                                    isMoving = false;
-                                }
-                            }
-                            else {
-                                isMoving = false;
-                            }
-                        }
-                    } else if (positionV + 1 < length && positionV + 2 >= length) {
-                        array[positionV + 1][positionH] = 1;
-                        positionV++;
-                        dir = direction.right;
-                        if(width == 1) {
-                            output();
-                            isMoving = false;
-                        }
-                    }
-                    //if(width)
+                    positionVer++;
                     break;
                 }
                 case right: {
-                    if(width == 1) {
-                        array[positionV][positionH] = 1;
-                        dir = direction.up;
-                        break;
-                    }
-                    if (positionH + 2 < width) {
-                        if (array[positionV][positionH + 2] == 0) {
-                            array[positionV][positionH + 1] = 1;
-                            positionH++;
-                        } else {
-                            if (positionV - 1 > 0) {
-                                if (array[positionV - 1][positionH] == 0 &&
-                                        array[positionV - 1][positionH - 1] == 0 &&
-                                        array[positionV - 2][positionH] == 0
-                                        ) {
-                                    dir = direction.up;
-                                }
-                                else {
-                                    isMoving = false;
-                                }
-                            }
-                            else {
-                                isMoving = false;
-                            }
-                        }
-                    } else if (positionH + 1 < width && positionH + 2 >= width) {
-                        array[positionV][positionH + 1] = 1;
-                        positionH++;
-                        dir = direction.up;
-                        if(length == 1) {
-                            output();
-                            isMoving = false;
-                        }
-                    }
-                    break;
-                }
-                case up: {
-                    if(length == 1) {
-                        array[positionV][positionH] = 1;
-                        dir = direction.left;
-                        break;
-                    }
-                    if (positionV - 1 > 0) {
-                        if (array[positionV - 2][positionH] == 0) {
-                            array[positionV - 1][positionH] = 1;
-                            positionV--;
-                        } else {
-                            if (positionH - 1 > 0) {
-                                if (array[positionV][positionH - 1] == 0 &&
-                                        array[positionV - 1][positionH - 1] == 0 &&
-                                        array[positionV][positionH - 2] == 0
-                                        ) {
-                                    dir = direction.left;
-                                }
-                                else {
-                                    isMoving = false;
-                                }
-                            }
-                            else {
-                                isMoving = false;
-                            }
-                        }
-                    } else if (positionV > 0 && positionV - 2 <= 0) {
-                        array[positionV - 1][positionH] = 1;
-                        positionV--;
-                        dir = direction.left;
-                        if(width == 1) {
-                            output();
-                            isMoving = false;
-                        }
-                    }
+                    positionHor++;
                     break;
                 }
                 case left: {
-                    if(width == 1) {
-                        array[positionV][positionH] = 1;
-                        dir = direction.down;
-                        break;
-                    }
-                    if (positionH - 1 > 0) {
-                        if (array[positionV][positionH - 2] == 0) {
-                            array[positionV][positionH - 1] = 1;
-                            positionH--;
-                        } else {
-                            if (positionV + 2 < length) {
-                                if (array[positionV + 1][positionH] == 0 &&
-                                        array[positionV + 1][positionH + 1] == 0 &&
-                                        array[positionV + 2][positionH] == 0
-                                        ) {
-                                    dir = direction.down;
-                                }
-                                else {
-                                    isMoving = false;
-                                }
-                            }
-                            else {
-                                isMoving = false;
-                            }
-                        }
-                    } else if (positionH > 0 && positionH - 2 <= 0) {
-                        array[positionV][positionH - 1] = 1;
-                        positionH--;
-                        dir = direction.down;
-                        if(length == 1) {
-                            output();
-                            isMoving = false;
-                        }
-                    }
+                    positionHor--;
+                    break;
+                }
+                case up: {
+                    positionVer--;
                     break;
                 }
             }
+            board.fillElement(positionVer, positionHor);
+            return true;
         }
+        return false;
+    }
+
+    /**
+     * checking if move is allowed
+     *
+     * @return true if move is allowed, otherwise false
+     */
+    private boolean moveCheck() {
+        switch (direction) {
+            case down: {
+                if(checkSurround(positionVer + 1, positionHor) == 0
+                        && board.getElement(positionVer + 1, positionHor) == 0) {
+                    return true;
+                }
+                break;
+            }
+            case right: {
+                if(checkSurround(positionVer, positionHor + 1) == 0
+                        && board.getElement(positionVer, positionHor + 1) == 0) {
+                    return true;
+                }
+                break;
+            }
+            case up: {
+                if(checkSurround(positionVer - 1, positionHor) == 0
+                        && board.getElement(positionVer - 1, positionHor) == 0) {
+                    return true;
+                }
+                break;
+            }
+            case left: {
+                if(checkSurround(positionVer, positionHor - 1) == 0
+                        && board.getElement(positionVer, positionHor - 1) == 0) {
+                    return true;
+                }
+                break;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * gets the amount of filled elements of the board around element with given coordinates
+     * @param positionHor vertical coordinate
+     * @param positionVer horizontal coordinate
+     * @return the amount of filled elements of the board around element with given coordinates
+     */
+    private int checkSurround(int positionVer, int positionHor) {
+        int counter = 0;
+        if(board.getElement(positionVer - 1, positionHor) == 1
+                && direction != Direction.down) {
+            counter++;
+        }
+        if(board.getElement(positionVer - 1, positionHor + 1) == 1
+                && direction != Direction.down
+                && direction != Direction.left) {
+            counter++;
+        }
+        if(board.getElement(positionVer, positionHor + 1) == 1
+                && direction != Direction.left) {
+            counter++;
+        }
+        if(board.getElement(positionVer + 1, positionHor + 1) == 1
+                && direction != Direction.up
+                && direction != Direction.left) {
+            counter++;
+        }
+        if(board.getElement(positionVer + 1, positionHor) == 1
+                && direction != Direction.up) {
+            counter++;
+        }
+        if(board.getElement(positionVer + 1, positionHor - 1) == 1
+                && direction != Direction.up
+                && direction != Direction.right) {
+            counter++;
+        }
+        if(board.getElement(positionVer, positionHor - 1) == 1
+                && direction != Direction.right) {
+            counter++;
+        }
+        if(board.getElement(positionVer - 1, positionHor - 1) == 1
+                && direction != Direction.down
+                && direction != Direction.right) {
+            counter++;
+        }
+        return counter;
     }
 }
