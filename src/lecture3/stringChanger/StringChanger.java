@@ -1,61 +1,57 @@
 package lecture3.stringChanger;
 
-import java.util.Scanner;
+import java.util.HashMap;
+import java.util.Map;
 
-public class StringChanger {
+    class StringChanger {
+    private Commands commands;
+    private String string;
+    private String outString;
+    private boolean breakFlag;
+    private HashMap<String, Commands> hashMap = new HashMap<>();
+
     /**
-     * Infinite loop with a possibility to choose operation
-     *
-     * @param string input string
+     * Infinite loop with a possibility to choose within operations
      */
-    public void start(String string) {
-        Scanner scanner = new Scanner(System.in);
-        String outString;
-        String pattern = "";
-        String replacement = "";
+    public void start() {
+        breakFlag = true;
+        InputString inputString = new InputString();
+        System.out.println("Введите строку");
+        string = inputString.input();
+        init(string);
         System.out.println("Введите номер операции.\n" +
                 "1. Удалить все числа из строки\n" +
                 "2. Заменить все символы латинского алфавита символом ?\n" +
                 "3. Оставить в строке только русские символы и числа\n" +
                 "4. Ввести новую строку\n" +
-                "5. Выход");
-        while (true) {
+                "Ввод прочих команд: выход");
+        while (breakFlag == true) {
             System.out.print(">");
-            String operation = scanner.nextLine();
-            switch (operation) {
-                case "1": {
-                    //Замена чисел на пустую строку - удаление
-                    pattern = "\\d";
-                    replacement = "";
-                    break;
-                }
-                case "2": {
-                    //Замена латинских символов на знак ?
-                    pattern = "[a-zA-Z]";
-                    replacement = "?";
-                    break;
-                }
-                case "3": {
-                    //Удаление всех символов, не являющихся символов кириллицы и цифр
-                    pattern = "[^а-яА-Я0-9]";
-                    replacement = "";
-                    break;
-                }
-                //Ввод новой строки
-                case "4": {
-                    string = scanner.nextLine();
-                    continue;
-                }
-                //Выход
-                case "5": {
-                    return;
-                }
-                default: {
-                    System.out.println("Некорректный ввод");
-                }
+            String operation = inputString.input();
+            //С 4 до меня не дошло, как сделать так же, если не выносить в отдельную группу классов
+            if(operation.equals("4")) {
+                System.out.println("Введите новую строку");
+                string = inputString.input();
+                continue;
             }
-            outString = string.replaceAll(pattern, replacement);
-            System.out.println(outString);
+            commands = hashMap.get(operation);
+            if(commands == null) {
+                breakFlag = false;
+            }
+            outString = commands.command(string);
+            if(outString == null) {
+                breakFlag = false;
+            }
+            if(breakFlag == true) {
+                System.out.println(outString);
+            }
         }
+    }
+
+    private Map<String, Commands> init(String string) {
+        hashMap.put("1", new CommandRmDecimals(string));
+        hashMap.put("2", new CommandRpLatins(string));
+        hashMap.put("3", new CommandRmNonDecKir(string));
+        return hashMap;
     }
 }
